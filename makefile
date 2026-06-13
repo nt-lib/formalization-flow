@@ -1,25 +1,17 @@
-.PHONY: clean test verify copy_remote copy_logs test_remote verify_remote
-REMOTE_DIR := /tmp/$(shell basename $(CURDIR))
+.PHONY: install test clean example
 
-clean:
-	find . -type f -name "*.sig" -delete
+install:
+	pip install -e .
 
 test:
-	@echo "No tests configured yet - override this target"
+	pytest tests/
 
-verify:
-	bash verify_all.sh
+clean:
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
+	rm -rf dist/ build/ *.egg-info
 
-copy_remote:
-	rsync -avz --delete ./ $(ssh):$(REMOTE_DIR)
-
-copy_logs:
-	rsync -avz $(ssh):$(REMOTE_DIR)/logs/ logs/
-
-# Usage: make test_remote ssh="user@hostname"
-test_remote: copy_remote
-	ssh $(ssh) "cd $(REMOTE_DIR) && make test"
-
-# Usage: make verify_remote ssh="user@hostname"
-verify_remote: copy_remote
-	ssh $(ssh) "cd $(REMOTE_DIR) && make verify"
+example:
+	cd examples && pdflatex main.tex
+	cd examples && plastex main.tex
+	cd examples && plastex --renderer=lean4 main.tex

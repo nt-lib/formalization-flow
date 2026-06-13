@@ -1,22 +1,35 @@
-# Magma
-*.sig
-
 # Python
 __pycache__/
 *.py[cod]
 *.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
 
-# SageMath
-*.sage.py
+# Virtual environments
+.venv/
+env/
 
 # Jupyter
 .ipynb_checkpoints
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# plasTeX output
+*.paux
 
 # Editors
 *.swp
 *~
 *.bak
 .idea/
+.vscode/
 
 # macOS
 .DS_Store
