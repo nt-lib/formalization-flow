@@ -1,0 +1,58 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{formalizationflow}[2026/06/13 FormalizationFlow structured theorem macros]
+
+\RequirePackage{amsthm}
+\RequirePackage{amsmath}
+
+% ---------------------------------------------------------------------------
+% Theorem environments
+% ---------------------------------------------------------------------------
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+
+% ---------------------------------------------------------------------------
+% Structure environments
+% ---------------------------------------------------------------------------
+
+% assumptions: an itemize list of hypotheses
+\newenvironment{assumptions}{%
+  \textbf{Assumptions:}%
+  \begin{itemize}%
+}{%
+  \end{itemize}%
+}
+
+% conclusion: a single displayed statement
+\newenvironment{conclusion}{%
+  \textbf{Conclusion:} %
+}{%
+  \par%
+}
+
+% ---------------------------------------------------------------------------
+% Object macros
+% Each macro produces a full sentence for use inside \item.
+% ---------------------------------------------------------------------------
+
+% \ring{name} -- "Let $name$ be a ring."
+\newcommand{\ring}[1]{Let $#1$ be a ring.}
+
+% \commring{name} -- "Let $name$ be a commutative ring."
+\newcommand{\commring}[1]{Let $#1$ be a commutative ring.}
+
+% \field{name} -- "Let $name$ be a field."
+\newcommand{\field}[1]{Let $#1$ be a field.}
+
+% \ringhom{name}{domain}{codomain}
+% "Let $name : domain \to codomain$ be a ring homomorphism."
+\newcommand{\ringhom}[3]{Let $#1 : #2 \to #3$ be a ring homomorphism.}
+
+% \unit{elem}{ring} -- "Let $elem \in ring^{\times}$ be a unit."
+\newcommand{\unit}[2]{Let $#1 \in #2^{\times}$ be a unit.}
+
+% \ideal{name}{ring} -- "Let $name \subseteq ring$ be an ideal."
+\newcommand{\ideal}[2]{Let $#1 \subseteq #2$ be an ideal.}
+
+% \module{name}{ring} -- "Let $name$ be a $ring$-module."
+\newcommand{\module}[2]{Let $#1$ be a $#2$-module.}

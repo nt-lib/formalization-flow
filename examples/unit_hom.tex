@@ -1,0 +1,21 @@
+\documentclass{article}
+\usepackage{formalizationflow}
+\begin{document}
+
+\begin{theorem}\label{thm:unit_hom}
+  \begin{assumptions}
+    \item \ring{R}
+    \item \ring{S}
+    \item \ringhom{f}{R}{S}
+    \item \unit{r}{R}
+  \end{assumptions}
+  \begin{conclusion}
+    \unit{f(r)}{S}
+  \end{conclusion}
+\end{theorem}
+
+\begin{proof}
+  Since $f$ is a ring homomorphism, it maps units to units.
+\end{proof}
+
+\end{document}
