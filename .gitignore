@@ -1,0 +1,25 @@
+# Magma
+*.sig
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# SageMath
+*.sage.py
+
+# Jupyter
+.ipynb_checkpoints
+
+# Editors
+*.swp
+*~
+*.bak
+.idea/
+
+# macOS
+.DS_Store
+
+# Scratch work
+scratch/
