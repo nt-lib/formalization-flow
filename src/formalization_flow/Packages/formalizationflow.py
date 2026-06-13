@@ -33,6 +33,14 @@ class module(Command):
     args = 'name ring'
 
 
+class theorem(Environment):
+    pass
+
+
+class lemma(Environment):
+    pass
+
+
 class assumptions(Environment):
     pass
 
