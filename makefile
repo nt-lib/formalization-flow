@@ -1,10 +1,20 @@
-.PHONY: install test clean example
+VENV := .venv
+PYTHON := $(VENV)/bin/python
+PIP := $(VENV)/bin/pip
+PYTEST := $(VENV)/bin/pytest
+PLASTEX := $(VENV)/bin/plastex
+
+.PHONY: venv install test clean example
+
+venv:
+	python3 -m venv $(VENV)
+	$(PIP) install -e ".[dev]"
 
 install:
-	pip install -e .
+	$(PIP) install -e ".[dev]"
 
 test:
-	pytest tests/
+	$(PYTEST) tests/ -v
 
 clean:
 	find . -type d -name __pycache__ -exec rm -rf {} +
@@ -12,6 +22,6 @@ clean:
 	rm -rf dist/ build/ *.egg-info
 
 example:
-	cd examples && pdflatex main.tex
-	cd examples && plastex main.tex
-	cd examples && plastex --renderer=lean4 main.tex
+	cd examples && TEXINPUTS="../sty/:" pdflatex unit_hom.tex
+	cd examples && TEXINPUTS="../sty/:" $(PLASTEX) unit_hom.tex
+	cd examples && TEXINPUTS="../sty/:" $(PLASTEX) --renderer lean4 unit_hom.tex

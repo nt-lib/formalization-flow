@@ -1,7 +1,44 @@
 from pathlib import Path
+from plasTeX import Command, Environment
 from plasTeX.PackageResource import PackageTemplateDir
 
 PKG_DIR = Path(__file__).parent
+
+
+class ring(Command):
+    args = 'name'
+
+
+class commring(Command):
+    args = 'name'
+
+
+class field(Command):
+    args = 'name'
+
+
+class ringhom(Command):
+    args = 'name domain codomain'
+
+
+class unit(Command):
+    args = 'elem ring'
+
+
+class ideal(Command):
+    args = 'name ring'
+
+
+class module(Command):
+    args = 'name ring'
+
+
+class assumptions(Environment):
+    pass
+
+
+class conclusion(Environment):
+    pass
 
 
 def ProcessOptions(options, document):
