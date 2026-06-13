@@ -1,6 +1,6 @@
-# research-template
+# formalization-flow
 
-<!-- Replace this line with a one-line description of what this repo computes -->
+A plasTeX plugin for writing structured LaTeX theorems that compile to sorry-filled Lean 4 skeletons
 
 ## Requirements
 
