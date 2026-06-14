@@ -23,5 +23,5 @@ clean:
 
 example:
 	cd examples && TEXINPUTS="../sty/:" pdflatex unit_hom.tex
-	cd examples && TEXINPUTS="../sty/:" $(PLASTEX) unit_hom.tex
-	cd examples && TEXINPUTS="../sty/:" $(PLASTEX) --renderer lean4 unit_hom.tex
+	cd examples && TEXINPUTS="../sty/:" $(PLASTEX) --plugins formalization_flow -- unit_hom.tex
+	cd examples && TEXINPUTS="../sty/:" $(PLASTEX) --renderer lean4 --plugins formalization_flow -- unit_hom.tex
