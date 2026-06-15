@@ -1,35 +1,47 @@
 # formalization-flow
 
-A plasTeX plugin for writing structured LaTeX theorems that compile to sorry-filled Lean 4 skeletons
+A plasTeX plugin and LaTeX style that lets a mathematician write one `.tex` file and build it
+three ways:
+
+- `pdflatex main.tex` -- PDF
+- `plastex main.tex` -- HTML
+- `plastex --renderer lean4 main.tex` -- sorry-filled Lean 4 skeleton
+
+**Status:** Alpha -- breaking changes expected until stabilisation.
 
 ## Requirements
 
-<!-- List software requirements here, e.g.:
-- Magma v2.29-1 or higher
-- SageMath X.Y
-- Python 3.x
-- GNU parallel
--->
+- Python >= 3.9
+- plasTeX >= 3.1
+- Jinja2 >= 3.1.0
+- pdflatex (for PDF output)
+- pytest (for tests; included in the `dev` extra)
 
-## Project layout
 
-| Directory | Contents |
-|-----------|----------|
-| `computations/` | Magma `.m` and SageMath `.sage` scripts run by `verify_all.sh` |
-| `logs/` | Output from `verify_all.sh` (committed as a record of the computations) |
-| `src/` | Library/source code shared across computations |
-| `tests/` | Test scripts |
-
-## Running computations
-
-To run all scripts in `computations/` in parallel (requires GNU parallel):
+## Installation
 
 ```bash
-make verify           # uses 10 parallel jobs by default
-bash verify_all.sh 4  # or call the script directly to set the job count
+make venv          # creates .venv and pip install -e ".[dev]"
 ```
 
-Output lands in `logs/<script-name>.txt`. SageMath scripts also produce `logs/<script-name>.timing.txt`.
+Or manually:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -e ".[dev]"
+```
+
+## Running the example
+
+```bash
+make example
+```
+
+This runs three builds of `examples/unit_hom.tex`:
+
+1. `pdflatex` -- produces `examples/unit_hom.pdf`
+2. `plastex` -- produces `examples/unit_hom/index.html`
+3. `plastex --renderer lean4` -- produces a `.lean` file
 
 ## Running tests
 
@@ -37,26 +49,118 @@ Output lands in `logs/<script-name>.txt`. SageMath scripts also produce `logs/<s
 make test
 ```
 
-## Running on a remote machine
+## Macro vocabulary
 
-```bash
-make verify_remote ssh="user@hostname"  # sync and run all computations
-make copy_logs     ssh="user@hostname"  # fetch logs back afterwards
+Each macro declares one mathematical object. In PDF/HTML it renders as a "Let ... be ..." sentence;
+in Lean 4 it maps to a parameter declaration or typeclass constraint.
+
+| Macro | PDF/HTML | Lean 4 (assumption) |
+|-------|----------|---------------------|
+| `\ring{R}` | Let *R* be a ring. | `(R : Type*) [Ring R]` |
+| `\commring{R}` | Let *R* be a commutative ring. | `(R : Type*) [CommRing R]` |
+| `\field{K}` | Let *K* be a field. | `(K : Type*) [Field K]` |
+| `\ringhom{f}{R}{S}` | Let *f* : *R* -> *S* be a ring homomorphism. | `(f : R ->+* S)` |
+| `\unit{r}{R}` | Let *r* in *R*^x be a unit. | `(hr : IsUnit r)` |
+| `\ideal{I}{R}` | Let *I* be an ideal of *R*. | `(I : Ideal R)` |
+| `\module{M}{R}` | Let *M* be an *R*-module. | `(M : Type*) [Module R M]` |
+
+## Environments
+
+`assumptions` -- an itemised list of hypotheses (structured macros or free-form text):
+
+```latex
+\begin{assumptions}
+  \item \ring{R}
+  \item \ringhom{f}{R}{S}
+\end{assumptions}
 ```
 
-## Troubleshooting
+`conclusion` -- the theorem's return type:
 
-**`parallel: command not found`**
-
-GNU parallel is not installed.  Install it with:
-
-```bash
-# macOS
-brew install parallel
-
-# Debian / Ubuntu
-sudo apt install parallel
-
-# RHEL / Fedora
-sudo dnf install parallel
+```latex
+\begin{conclusion}
+  \unit{f(r)}{S}
+\end{conclusion}
 ```
+
+Free-form `\item` text (not a structured macro) renders as-is in PDF/HTML and becomes
+`-- TODO: formalise assumption: <text>` in Lean 4. A free-form conclusion becomes
+`True /- sketch: <text> -/`.
+
+## Lean 4 output format
+
+For each `theorem`/`lemma` environment the renderer emits:
+
+```lean
+theorem <label> <assumptions> :
+    <conclusion> := by
+  sorry
+```
+
+`\label` is required on every theorem and lemma; the renderer raises an error if it is missing.
+
+Example -- given `examples/unit_hom.tex`:
+
+```latex
+\begin{theorem}\label{thm:unit_hom}
+  \begin{assumptions}
+    \item \ring{R}
+    \item \ring{S}
+    \item \ringhom{f}{R}{S}
+    \item \unit{r}{R}
+  \end{assumptions}
+  \begin{conclusion}
+    \unit{f(r)}{S}
+  \end{conclusion}
+\end{theorem}
+```
+
+Lean 4 output:
+
+```lean
+theorem unit_hom (R : Type*) [Ring R] (S : Type*) [Ring S] (f : R ->+* S) (hr : IsUnit r) :
+    IsUnit (f(r)) := by
+  sorry
+```
+
+## Architecture
+
+Command classes in `formalizationflow.py` are thin shells that only declare argument structure
+(`args`). No rendering logic lives in Python -- it all lives in Jinja2 template files. Adding a
+new mathematical object means adding template files only; no Python changes are required.
+
+To add `\group{G}` mapping to `(G : Type*) [Group G]`:
+
+1. Add `\newcommand{\group}[1]{Let $#1$ be a group.}` to `sty/formalizationflow.sty`.
+2. Add `src/formalization_flow/Packages/renderer_templates/html5/group.jinja2`.
+3. Add `src/formalization_flow/Packages/renderer_templates/lean4/assumption/group.jinja2`.
+4. Add a `group` Command class to `formalizationflow.py` with `args = 'name'`.
+
+## Known limitations (alpha)
+
+- HTML Jinja2 templates use `self.attributes.name`; this may need adjustment depending on the
+  installed plasTeX version.
+- The nodeName for `\item` inside `assumptions` may differ across plasTeX versions (`@item`).
+- `\label` extraction may need adjustment; check `thm.attributes` and `thm.userdata` if labels
+  are not found.
+- Lean 4 output file path is controlled by plasTeX's output config; use `plastex.cfg` to
+  override.
+
+## Related projects
+
+- [Lean Blueprint](https://github.com/PatrickMassot/leanblueprint) -- tracks formalization
+  progress; intended to be combinable.
+- [plasTeX](https://github.com/plastex/plastex/) -- the Python LaTeX parser this builds on.
+
+## Project layout
+
+| Path | Contents |
+|------|----------|
+| `src/formalization_flow/Packages/` | plasTeX macro and environment definitions (`formalizationflow.py`) |
+| `src/formalization_flow/Packages/renderer_templates/html5/` | Jinja2 templates for HTML rendering |
+| `src/formalization_flow/Packages/renderer_templates/lean4/` | Jinja2 templates for Lean 4 rendering (`assumption/` and `conclusion/`) |
+| `src/formalization_flow/Renderers/lean4/` | Lean 4 renderer (walks parse tree, emits `.lean`) |
+| `sty/` | `formalizationflow.sty` -- LaTeX style for PDF via pdflatex |
+| `examples/` | `unit_hom.tex` motivating example + `plastex.cfg` |
+| `tests/` | pytest suite (macros, environments, Lean 4 renderer, PDF smoke test) |
+| `docs/` | Design spec and MVP implementation plan |
